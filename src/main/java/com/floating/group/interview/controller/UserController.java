@@ -1,25 +1,27 @@
 package com.floating.group.interview.controller;
 
+import com.floating.group.interview.dto.CandleRequest;
+import com.floating.group.interview.dto.CandleResponse;
 import com.floating.group.interview.dto.UserDto;
 import com.floating.group.interview.exception.UserNotFoundException;
 import com.floating.group.interview.model.CryptoData;
 import com.floating.group.interview.model.User;
 import com.floating.group.interview.repository.CryptoDataRepository;
+import com.floating.group.interview.service.CoinbaseExchangeService;
 import com.floating.group.interview.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
@@ -30,9 +32,12 @@ public class UserController {
 
     private final CryptoDataRepository cryptoDataRepository;
 
-    public UserController(@Autowired UserService userService, @Autowired CryptoDataRepository cryptoDataRepository) {
+    private final CoinbaseExchangeService coinbaseExchangeService;
+
+    public UserController(@Autowired UserService userService, @Autowired CryptoDataRepository cryptoDataRepository, CoinbaseExchangeService coinbaseExchangeService) {
         this.userService = userService;
         this.cryptoDataRepository = cryptoDataRepository;
+        this.coinbaseExchangeService = coinbaseExchangeService;
     }
 
     /**
@@ -86,6 +91,9 @@ public class UserController {
         return userService.deleteAll(userIds);
     }
 
+    // incorporate debugging time
+    // comments in code
+    // interval updates
     @PostMapping("/insert")
     public void insert() throws IOException, ParseException {
         BufferedReader br = new BufferedReader(new FileReader("/Users/300072873/Downloads/FTX_Futures_BTCPERP_minute.csv"));
@@ -131,5 +139,10 @@ public class UserController {
                 }
             }
         }
+    }
+
+    @GetMapping("/candles")
+    public List<CandleResponse> getCandleResponse(@RequestBody CandleRequest candleRequest) {
+        return coinbaseExchangeService.getCandleResponse(candleRequest);
     }
 }
